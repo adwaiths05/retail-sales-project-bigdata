@@ -1,2 +1,2 @@
 # retail-sales-project-bigdata
-And end to end pipeline for retail sales forecasting and analytics
+An end to end pipeline for retail sales forecasting and analytics
