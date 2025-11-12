@@ -8,24 +8,25 @@ import java.util.List;
 public class FullPreprocessingPipeline {
 
     public static void main(String[] args) {
-        // --- 1. Configuration (Adjust these paths) ---
+        // --- 1. Configuration (ADJUSTED FOR LOCAL DVC WORKFLOW) ---
+        
         // Input: HDFS (assuming raw CSVs are staged here for processing)
         final String INPUT_HDFS_PATH = "hdfs:///user/hadoop/data/raw/*.csv";
 
-        // Output: S3 (using the s3a connector for final storage)
-        final String S3_BASE_PATH = "s3a://my-dvc-bucket/path/to/storage/data/processed/";
-        final String S3_ITEM_PATH = S3_BASE_PATH + "item_transactions/";
-        final String S3_CUSTOMER_PATH = S3_BASE_PATH + "customer_segments/";
-        final String S3_TEMPORAL_PATH = S3_BASE_PATH + "campaign_events/";
+        // Output: LOCAL FILESYSTEM PATH (This is the path DVC will track)
+        final String LOCAL_BASE_PATH = "data/processed/";
+        final String LOCAL_ITEM_PATH = LOCAL_BASE_PATH + "item_transactions/";
+        final String LOCAL_CUSTOMER_PATH = LOCAL_BASE_PATH + "customer_segments/";
+        final String LOCAL_TEMPORAL_PATH = LOCAL_BASE_PATH + "campaign_events/";
 
         // --- 2. Initialize Spark Session ---
-        // Spark session configured for Hadoop/S3 access
+        // Using getOrCreate() allows running locally or on a cluster
         SparkSession spark = SparkSession
                 .builder()
                 .appName("RetailDataPreprocessingPipeline")
                 .getOrCreate();
 
-        // Standardized list of columns
+        // Standardized list of columns (kept for reference, but not used in the read logic)
         List<String> rawColumns = Arrays.asList(
             "household_key", "BASKET_ID", "DAY", "PRODUCT_ID", "QUANTITY", "SALES_VALUE",
             "STORE_ID", "RETAIL_DISC", "TRANS_TIME", "WEEK_NO", "COUPON_DISC", "COUPON_MATCH_DISC",
@@ -51,7 +52,7 @@ public class FullPreprocessingPipeline {
             cleanedDf = cleanedDf.withColumnRenamed(col, newCol);
         }
         
-        // Data Cleaning and Feature Engineering (from previous suggestion)
+        // Data Cleaning and Feature Engineering
         cleanedDf = cleanedDf
             // Impute missing numericals with 0.0
             .na().fill(0.0, new String[]{"sales_value", "quantity", "retail_disc", "coupon_disc", "coupon_match_disc"})
@@ -66,14 +67,13 @@ public class FullPreprocessingPipeline {
                          .minus(functions.col("coupon_disc")).minus(functions.col("coupon_match_disc"))
             );
         
-        // --- 4. Divide Data into Three Denormalized Tables and Write to S3 ---
+        // --- 4. Divide Data into Three Denormalized Tables and Write to LOCAL DISK ---
 
         // -----------------------------------------------------------
-        // 4a. 🛒 Transaction / Item-Level Table (Core Forecasting & MBA)
+        // 4a. 🛒 Transaction / Item-Level Table
         // -----------------------------------------------------------
-        System.out.println("Writing Item-Level Data to S3...");
+        System.out.println("Writing Item-Level Data to Local Disk for DVC tracking...");
         
-        // Select core transaction/product columns and drop high-redundancy customer columns
         Dataset<Row> itemDf = cleanedDf.select(
             "household_key", "basket_id", "day", "product_id", "quantity", "sales_value", 
             "store_id", "retail_disc", "coupon_disc", "coupon_match_disc", "net_sales",
@@ -81,53 +81,51 @@ public class FullPreprocessingPipeline {
             "display", "mailer"
         );
         
-        // Write to S3, partitioned by DEPARTMENT for query efficiency
+        // Write to local disk, partitioned by DEPARTMENT
         itemDf.write()
             .mode("overwrite")
             .partitionBy("department")
-            .parquet(S3_ITEM_PATH);
+            .parquet(LOCAL_ITEM_PATH);
             
-        System.out.println("✅ Item-Level Data saved to: " + S3_ITEM_PATH);
+        System.out.println("✅ Item-Level Data saved locally to: " + LOCAL_ITEM_PATH);
 
 
         // -----------------------------------------------------------
-        // 4b. 🧑‍🤝‍🧑 Customer / Household-Level Table (Segmentation)
+        // 4b. 🧑‍🤝‍🧑 Customer / Household-Level Table
         // -----------------------------------------------------------
-        System.out.println("Writing Customer-Level Data to S3...");
+        System.out.println("Writing Customer-Level Data to Local Disk for DVC tracking...");
 
-        // Select static customer/demographic columns, ensuring uniqueness by household_key
         Dataset<Row> customerDf = cleanedDf.select(
             "household_key", "age_desc", "marital_status_code", "income_desc", 
             "homeowner_desc", "hh_comp_desc", "household_size_desc", "kid_category_desc"
-        ).dropDuplicates("household_key"); // Crucial: Remove duplicates so each row is one customer
+        ).dropDuplicates("household_key");
 
-        // Write to S3, partitioned by INCOME_DESC for common segmentation queries
+        // Write to local disk, partitioned by INCOME_DESC
         customerDf.write()
             .mode("overwrite")
             .partitionBy("income_desc")
-            .parquet(S3_CUSTOMER_PATH);
+            .parquet(LOCAL_CUSTOMER_PATH);
             
-        System.out.println("✅ Customer-Level Data saved to: " + S3_CUSTOMER_PATH);
+        System.out.println("✅ Customer-Level Data saved locally to: " + LOCAL_CUSTOMER_PATH);
 
 
         // -----------------------------------------------------------
-        // 4c. ⏱️ Temporal / Campaign-Level Table (Exogenous Features)
+        // 4c. ⏱️ Temporal / Campaign-Level Table
         // -----------------------------------------------------------
-        System.out.println("Writing Temporal/Campaign Data to S3...");
+        System.out.println("Writing Temporal/Campaign Data to Local Disk for DVC tracking...");
 
-        // Select columns relevant to time and promotion events
         Dataset<Row> temporalDf = cleanedDf.select(
-            "week_no", "day", "trans_time", "store_id", // For time slicing
-            "coupon_upc", "campaign", "description", "start_day", "end_day" // For promotion events
-        ).dropDuplicates("week_no", "campaign"); // Focus on unique campaign events per week
+            "week_no", "day", "trans_time", "store_id", 
+            "coupon_upc", "campaign", "description", "start_day", "end_day"
+        ).dropDuplicates("week_no", "campaign");
 
-        // Write to S3, partitioned by WEEK_NO for quick time-series feature lookups
+        // Write to local disk, partitioned by WEEK_NO
         temporalDf.write()
             .mode("overwrite")
             .partitionBy("week_no")
-            .parquet(S3_TEMPORAL_PATH);
+            .parquet(LOCAL_TEMPORAL_PATH);
             
-        System.out.println("✅ Temporal/Campaign Data saved to: " + S3_TEMPORAL_PATH);
+        System.out.println("✅ Temporal/Campaign Data saved locally to: " + LOCAL_TEMPORAL_PATH);
 
         spark.stop();
     }
