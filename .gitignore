@@ -1,0 +1,42 @@
+# --------------------
+# 1. DVC Files/Folders
+# --------------------
+
+# The entire DVC cache (where the actual data lives locally)
+.dvc/cache
+
+# The DVC internal configuration directory
+.dvc/tmp/
+
+# --------------------
+# 2. Virtual Environment
+# --------------------
+# Exclude the virtual environment folder
+dvc-venv/
+
+# --------------------
+# 3. Raw Data
+# --------------------
+# NEVER track raw data files directly
+data/raw/
+
+# --------------------
+# 4. Processed Data (The actual Parquet files)
+# --------------------
+# DVC tracks the metadata (.dvc files), but Git ignores the actual large files.
+data/processed/
+
+# --------------------
+# 5. Compiled & Temporary Files
+# --------------------
+# Java/Spark build artifacts
+target/
+*.class
+
+# Python artifacts
+__pycache__/
+*.pyc
+.ipynb_checkpoints
+
+# Large log files
+*.log
