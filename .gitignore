@@ -8,6 +8,7 @@
 # The DVC internal configuration directory
 .dvc/tmp/
 
+*.jar
 # --------------------
 # 2. Virtual Environment
 # --------------------
