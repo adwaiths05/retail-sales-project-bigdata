@@ -14,7 +14,7 @@
 # --------------------
 # Exclude the virtual environment folder
 dvc-venv/
-
+myenv/
 # --------------------
 # 3. Raw Data
 # --------------------
