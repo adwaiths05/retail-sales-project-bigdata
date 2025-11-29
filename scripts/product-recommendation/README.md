@@ -4,9 +4,7 @@
 
 This README explains how to run the **ALS Collaborative Filtering** Spark job included in the `retail-recommendation` project. This model generates personalized "Next Best Offer" product recommendations for every household using implicit feedback (sales value).
 
-
-
-## 📂 Project Location
+##📂 Project Location
 
 
 
@@ -35,14 +33,22 @@ echo "Using fs.defaultFS = $FS"
 ```
 
 
-##📦 Step 2 — Set JAR Path
+📦 Step 2 — Set JAR Path
 The compiled application JAR is inside the target/ directory:�
 
 ```
 ABSJAR="$(pwd)/target/retail-recommendation-1.0-SNAPSHOT.jar"
 ```
 
-##🚀 Step 4 — Run the Recommendation Job
+📥 Step 3 — Input Base Path
+This model requires a base directory containing transaction_data.csv and product.csv.
+
+```
+# Point this to the folder containing your CSV files
+INPUT_BASE="hdfs://localhost:9000/dunnhumby"
+```
+
+🚀 Step 4 — Run the Recommendation Job
 Use the following full Spark command. This runs the ALS (Alternating Least Squares) algorithm, trains the matrix factorization model, and exports the results.
 
 
@@ -57,7 +63,7 @@ spark-submit \
   "$INPUT_BASE"
   ```
 
-##📤 Output
+📤 Output
 The results will be saved as a single Parquet file in:
 
 ```
@@ -74,7 +80,7 @@ COMMODITY_DESC: The human-readable product name.
 
 prediction_score: The confidence score (higher is better).
 
-##✅ Summary
+✅ Summary
 This README provides:
 
 The correct directory to run the job.
