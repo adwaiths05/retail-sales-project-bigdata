@@ -48,7 +48,7 @@ This model requires a base directory containing transaction_data.csv and product
 INPUT_BASE="hdfs://localhost:9000/dunnhumby"
 ```
 
-🚀 Step 4 — Run the Recommendation Job
+## 🚀 Step 4 — Run the Recommendation Job
 Use the following full Spark command. This runs the ALS (Alternating Least Squares) algorithm, trains the matrix factorization model, and exports the results.
 
 
