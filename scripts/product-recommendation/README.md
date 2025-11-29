@@ -34,104 +34,55 @@ echo "Using fs.defaultFS = $FS"
 
 ```
 
-If detection fails, the fallback value will be: hdfs://localhost:9000
 
+📦 Step 2 — Set JAR Path
+The compiled application JAR is inside the target/ directory:�
 
-
+```
 ABSJAR="$(pwd)/target/retail-recommendation-1.0-SNAPSHOT.jar"
-
-
-
-📥 Step 3 — Input Base Path
-
-This model requires a base directory containing transaction_data.csv and product.csv.
-
-# Point this to the folder containing your CSV files
 ```
-INPUT_BASE="hdfs://localhost:9000/dunnhumby"
-```
-
 
 🚀 Step 4 — Run the Recommendation Job
-
 Use the following full Spark command. This runs the ALS (Alternating Least Squares) algorithm, trains the matrix factorization model, and exports the results.
 
 
 ```
 spark-submit \
-
   --class com.retail.ml.ProductRecommendation \
-
   --master local[*] \
-
   --conf spark.driver.memory=4g \
-
   --conf spark.hadoop.fs.defaultFS="$FS" \
-
   --conf spark.ui.showConsoleProgress=false \
-
   "$ABSJAR" \
-
   "$INPUT_BASE"
+  ```
 
-```
-
-Argument,Meaning
-
-$ABSJAR,The path to the compiled Java application.
-
-$INPUT_BASE,The HDFS folder containing transaction_data.csv and product.csv.
-
-
-
-📤 Output The results will be saved as a single Parquet file in:
-
+📤 Output
+The results will be saved as a single Parquet file in:
 
 ```
 <INPUT_BASE>/predictions/final_recommendation.parquet
-
 ```
 
 Schema of the Output:
 
-
-
 household_key: The customer ID.
-
-
 
 PRODUCT_ID: The recommended product ID.
 
-
-
 COMMODITY_DESC: The human-readable product name.
-
-
 
 prediction_score: The confidence score (higher is better).
 
-
-
 ✅ Summary
-
 This README provides:
-
-
 
 The correct directory to run the job.
 
-
-
 How to detect the HDFS filesystem.
-
-
 
 How to locate your compiled JAR.
 
-
-
 The complete Spark command to generate personalized recommendations.
-
-
 
 You're ready to run ALS Matrix Factorization on the Dunnhumby dataset! 🚀
