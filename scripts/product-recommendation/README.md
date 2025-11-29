@@ -20,7 +20,7 @@ cd ~/retail-recommendation
 ```
 
 
-🔧 Step 1 — Detect fs.defaultFS
+##🔧 Step 1 — Detect fs.defaultFS
 
 Spark requires the correct HDFS filesystem URI. Use the following command to dynamically detect it from Hadoop's configuration:
 
@@ -35,14 +35,14 @@ echo "Using fs.defaultFS = $FS"
 ```
 
 
-📦 Step 2 — Set JAR Path
+##📦 Step 2 — Set JAR Path
 The compiled application JAR is inside the target/ directory:�
 
 ```
 ABSJAR="$(pwd)/target/retail-recommendation-1.0-SNAPSHOT.jar"
 ```
 
-🚀 Step 4 — Run the Recommendation Job
+##🚀 Step 4 — Run the Recommendation Job
 Use the following full Spark command. This runs the ALS (Alternating Least Squares) algorithm, trains the matrix factorization model, and exports the results.
 
 
@@ -57,7 +57,7 @@ spark-submit \
   "$INPUT_BASE"
   ```
 
-📤 Output
+##📤 Output
 The results will be saved as a single Parquet file in:
 
 ```
@@ -74,7 +74,7 @@ COMMODITY_DESC: The human-readable product name.
 
 prediction_score: The confidence score (higher is better).
 
-✅ Summary
+##✅ Summary
 This README provides:
 
 The correct directory to run the job.
