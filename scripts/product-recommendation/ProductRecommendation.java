@@ -22,10 +22,10 @@ public class ProductRecommendation {
         // 1. Setup Paths
         // Default to localhost HDFS
         String basePath = (args.length > 0) ? args[0] : "hdfs://localhost:9000/dunnhumby";
-        // The specific name you requested
+      
         String finalFileName = "final_recommendation.parquet"; 
         
-        // We will write to a temp folder first, then move the file
+       
         String tempOutputPath = basePath + "/predictions/temp_recs";
         String finalOutputPath = basePath + "/predictions/" + finalFileName;
 
